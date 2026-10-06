@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor de Rede - Raspberry Pi</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f2f4f7;
+            margin: 0;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .info,
+        .testes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .card {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card strong {
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .teste {
+            background: white;
+            padding: 18px;
+            border-radius: 10px;
+            border-left: 6px solid #999;
+        }
+
+        .teste.ok {
+            border-left-color: #28a745;
+        }
+
+        .teste.falha {
+            border-left-color: #dc3545;
+        }
+
+        .teste.atencao {
+            border-left-color: #ffc107;
+        }
+
+        .status-ok {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .status-falha {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .status-atencao {
+            color: #d39e00;
+            font-weight: bold;
+        }
+
+        form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+
+        input {
+            padding: 10px;
+            width: 250px;
+            max-width: 90%;
+        }
+
+        button {
+            padding: 10px 18px;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background: #222;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        .titulo-secao {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Monitor de Rede - Raspberry Pi</h1>
+
+    <h2 class="titulo-secao">Informações da rede</h2>
+
+    <div class="info">
+
+        <div class="card">
+            <strong>Equipamento</strong>
+            {{ dados.nome }}
+        </div>
+
+        <div class="card">
+            <strong>Interface</strong>
+            {{ dados.interface }}
+        </div>
+
+        <div class="card">
+            <strong>Tipo de conexão</strong>
+            {{ dados.tipo }}
+        </div>
+
+        <div class="card">
+            <strong>Estado da conexão</strong>
+            {{ dados.estado }}
+        </div>
+
+        <div class="card">
+            <strong>Endereço IP</strong>
+            {{ dados.ip }}
+        </div>
+
+        <div class="card">
+            <strong>Máscara da rede</strong>
+            {{ dados.mascara }}
+        </div>
+
+        <div class="card">
+            <strong>Gateway</strong>
+            {{ dados.gateway }}
+        </div>
+
+        <div class="card">
+            <strong>Servidores DNS</strong>
+            {{ dados.dns }}
+        </div>
+
+        <div class="card">
+            <strong>Última verificação</strong>
+            {{ dados.verificacao }}
+        </div>
+
+    </div>
+
+
+    <h2 class="titulo-secao">Testar equipamento da rede local</h2>
+
+    <form method="GET" action="/rede">
+
+        <label>
+            Informe o IP ou nome de um equipamento/serviço da rede:
+        </label>
+
+        <br><br>
+
+        <input
+            type="text"
+            name="destino_local"
+            placeholder="Ex.: 10.1.25.100"
+        >
+
+        <button type="submit">
+            Nova verificação
+        </button>
+
+    </form>
+
+
+    <h2 class="titulo-secao">Testes de conectividade</h2>
+
+    <div class="testes">
+
+        <div class="teste {{ dados.teste_gateway.classe }}">
+
+            <h3>Gateway da rede</h3>
+
+            <p>
+                <strong>Destino:</strong>
+                {{ dados.teste_gateway.destino }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if dados.teste_gateway.status == "OK" %}
+                    <span class="status-ok">OK</span>
+                {% else %}
+                    <span class="status-falha">FALHA</span>
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Tempo de resposta:</strong>
+                {{ dados.teste_gateway.tempo }}
+            </p>
+
+        </div>
+
+
+        <div class="teste {{ dados.teste_local.classe }}">
+
+            <h3>Equipamento da rede local</h3>
+
+            <p>
+                <strong>Destino:</strong>
+                {{ dados.teste_local.destino }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if dados.teste_local.status == "OK" %}
+                    <span class="status-ok">OK</span>
+
+                {% elif dados.teste_local.status == "ATENÇÃO" %}
+                    <span class="status-atencao">ATENÇÃO</span>
+
+                {% else %}
+                    <span class="status-falha">FALHA</span>
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Tempo de resposta:</strong>
+                {{ dados.teste_local.tempo }}
+            </p>
+
+        </div>
+
+
+        <div class="teste {{ dados.teste_externo.classe }}">
+
+            <h3>Serviço externo</h3>
+
+            <p>
+                <strong>Destino:</strong>
+                {{ dados.teste_externo.destino }}
+            </p>
+
+            <p>
+                <strong>Status:</strong>
+
+                {% if dados.teste_externo.status == "OK" %}
+                    <span class="status-ok">OK</span>
+                {% else %}
+                    <span class="status-falha">FALHA</span>
+                {% endif %}
+            </p>
+
+            <p>
+                <strong>Tempo de resposta:</strong>
+                {{ dados.teste_externo.tempo }}
+            </p>
+
+        </div>
+
+    </div>
+
+    <p>
+        <strong>Horário da verificação:</strong>
+        {{ dados.verificacao }}
+    </p>
+
+</div>
+
+</body>
+</html>
