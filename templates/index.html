@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Painel Raspberry Pi</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Painel de Status da Raspberry Pi</h1>
+
+        <p class="subtitulo">
+            Informações atuais do sistema
+        </p>
+
+        <div class="cards">
+
+            <div class="card">
+                <h2>Equipamento</h2>
+                <p>{{ dados.nome }}</p>
+            </div>
+
+            <div class="card">
+                <h2>IP Local</h2>
+                <p>{{ dados.ip }}</p>
+            </div>
+
+            <div class="card">
+                <h2>Tempo ligado</h2>
+                <p>{{ dados.uptime }}</p>
+            </div>
+
+            <div class="card">
+                <h2>Uso da CPU</h2>
+                <p>{{ dados.cpu }}%</p>
+            </div>
+
+            <div class="card">
+                <h2>Temperatura</h2>
+                <p>{{ dados.temperatura }} °C</p>
+            </div>
+
+            <div class="card">
+                <h2>Memória</h2>
+                <p>{{ dados.memoria }}%</p>
+            </div>
+
+            <div class="card">
+                <h2>Armazenamento</h2>
+                <p>{{ dados.armazenamento }}%</p>
+            </div>
+
+            <div class="card">
+                <h2>Última atualização</h2>
+                <p>{{ dados.atualizacao }}</p>
+            </div>
+
+        </div>
+
+        <button onclick="location.reload()">
+            Atualizar informações
+        </button>
+
+    </div>
+
+</body>
+
+</html>
