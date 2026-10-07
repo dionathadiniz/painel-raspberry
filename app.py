@@ -38,6 +38,7 @@ def obter_uptime():
         minutos = int((segundos % 3600) // 60)
 
         return f"{dias} dias, {horas} horas e {minutos} minutos"
+
     except:
         return "Indisponível"
 
@@ -128,7 +129,8 @@ def obter_interface():
     try:
         resultado = subprocess.check_output(
             ["ip", "-o", "route", "show", "default"],
-            text=True
+            text=True,
+            timeout=3
         )
 
         match = re.search(r"dev\s+(\S+)", resultado)
@@ -146,7 +148,8 @@ def obter_estado_interface(interface):
     try:
         resultado = subprocess.check_output(
             ["ip", "link", "show", interface],
-            text=True
+            text=True,
+            timeout=3
         )
 
         if "state UP" in resultado:
@@ -172,10 +175,14 @@ def obter_ip_rede(interface):
     try:
         resultado = subprocess.check_output(
             ["ip", "-4", "addr", "show", interface],
-            text=True
+            text=True,
+            timeout=3
         )
 
-        match = re.search(r"inet\s+(\d+\.\d+\.\d+\.\d+)/(\d+)", resultado)
+        match = re.search(
+            r"inet\s+(\d+\.\d+\.\d+\.\d+)/(\d+)",
+            resultado
+        )
 
         if not match:
             return "Indisponível"
@@ -190,10 +197,14 @@ def obter_mascara(interface):
     try:
         resultado = subprocess.check_output(
             ["ip", "-4", "addr", "show", interface],
-            text=True
+            text=True,
+            timeout=3
         )
 
-        match = re.search(r"inet\s+\d+\.\d+\.\d+\.\d+/(\d+)", resultado)
+        match = re.search(
+            r"inet\s+\d+\.\d+\.\d+\.\d+/(\d+)",
+            resultado
+        )
 
         if not match:
             return "Indisponível"
@@ -222,10 +233,14 @@ def obter_gateway():
     try:
         resultado = subprocess.check_output(
             ["ip", "route", "show", "default"],
-            text=True
+            text=True,
+            timeout=3
         )
 
-        match = re.search(r"default via\s+(\S+)", resultado)
+        match = re.search(
+            r"default via\s+(\S+)",
+            resultado
+        )
 
         if match:
             return match.group(1)
@@ -262,7 +277,8 @@ def testar_conexao(destino):
         resultado = subprocess.run(
             ["ping", "-c", "1", "-W", "2", destino],
             capture_output=True,
-            text=True
+            text=True,
+            timeout=4
         )
 
         tempo = round((time.time() - inicio) * 1000, 1)
@@ -279,6 +295,14 @@ def testar_conexao(destino):
             "destino": destino,
             "status": "FALHA",
             "tempo": "Indisponível",
+            "classe": "falha"
+        }
+
+    except subprocess.TimeoutExpired:
+        return {
+            "destino": destino,
+            "status": "FALHA",
+            "tempo": "Tempo excedido",
             "classe": "falha"
         }
 
@@ -318,12 +342,16 @@ def rede():
     interface = obter_interface()
     gateway = obter_gateway()
 
-    destino_local = request.args.get("destino_local", "").strip()
+    destino_local = request.args.get(
+        "destino_local",
+        ""
+    ).strip()
 
     teste_gateway = testar_conexao(gateway)
 
     if destino_local:
         teste_local = testar_conexao(destino_local)
+
     else:
         teste_local = {
             "destino": "Não informado",
@@ -343,14 +371,22 @@ def rede():
         "mascara": obter_mascara(interface),
         "gateway": gateway,
         "dns": obter_dns(),
-        "verificacao": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
+        "verificacao": datetime.now().strftime(
+            "%d/%m/%Y %H:%M:%S"
+        ),
         "teste_gateway": teste_gateway,
         "teste_local": teste_local,
         "teste_externo": teste_externo
     }
 
-    return render_template("rede/index.html", dados=dados_rede)
+    return render_template(
+        "rede/index.html",
+        dados=dados_rede
+    )
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(
+        host="0.0.0.0",
+        port=5000
+    )
